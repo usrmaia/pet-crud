@@ -1,0 +1,13 @@
+#grid-container{
+    font-size: 120%;
+    
+}
+
+#imagem-loja-pet{
+    padding: 30px 30px 30px 30px;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    align-content: center;
+    max-width: 1200px;
+}
