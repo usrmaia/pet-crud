@@ -6,7 +6,7 @@ import Home from "./../components/home/Home"
 import UserCRUD from "../components/user/UserCrud"
 import {BrowserRouter} from 'react-router-dom'
 import Routes from "./Routes"
-import Contact from "../components/contact/InformContact"
+import Contacts from "../components/contact/InformContact"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "font-awesome/css/font-awesome.min.css"
 
@@ -15,7 +15,7 @@ const props = () => (
         <div className="app">
             <Logo />
             <Nav />
-            <Contact />
+            <Routes />
             <Footer />
         </div>
     </BrowserRouter>
