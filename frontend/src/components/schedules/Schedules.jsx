@@ -1,20 +1,24 @@
 import Main from "./../tamplate/Main"
 import axios from "axios"
 import { useEffect, useState } from "react"
+import { parse } from "ipaddr.js"
 
 const baseURL = "http://localhost:3001/users"
+const baseURL_sc = "http://localhost:3001/schedules"
 
 const headerProps = {
-    icon: "users",
-    title: "Usuários",
-    subtitle: "Cadastro de Usuários: CRUD"
+    icon: "calendar",
+    title: "Agendamento",
+    subtitle: "Agendamento: CRUD"
 }
 
-const initialState = {dono: "", pet: "", especie_raca: "", contato: "", descricao: ""}
+const initialState = {id_cliente: "", horario: "", motivo: ""}
 
 export default function UserCRUD(){
-    const [user, setUser] = useState(initialState)
-    const [userList, setItems] = useState([])
+    const [user_sc, setUser] = useState(initialState)
+    const [userList_sc, setItems] = useState([])
+    const [user, setItems_cliente] = useState()
+    //const [userList, setItems_cliente] = useState([])
 
     useEffect(() => {
         const getAllUsers = async () => {
@@ -26,7 +30,7 @@ export default function UserCRUD(){
 
     const retrieveUSers = async () => {
         try{
-            const response = await axios.get(baseURL)
+            const response = await axios.get(baseURL_sc)
             return response.data
         }catch(error){
             alert(error)
@@ -38,22 +42,33 @@ export default function UserCRUD(){
     }
 
     const remove = (userSelected) => {
-        axios.delete(`${baseURL}/${userSelected.id}`)
+        axios.delete(`${baseURL_sc}/${userSelected.id}`)
             .then(resp => {
-                const newList = userList.filter(user => user !== userSelected)
+                const newList = userList_sc.filter(user => user !== userSelected)
                 setItems(newList)
             })
     }
 
     const save = () => {
-        if(user.dono === "" || user.pet === "" || user.especie_raca === ""){
+        if(user_sc.id_cliente === "" || user_sc.horario === "" || user_sc.motivo === ""){
             alert("Preencha os campos obrigatórios!")
             return
         }
+        
+        try {
+            const response = axios.get(`${baseURL}/${user_sc.id_cliente}`)
+                .then(resp => {
+                    console.log(resp)
+                    if(resp.status != 200) {return}
+            })
+        } catch (error) {
+            alert(error)
+            return
+        }
 
-        const method = user.id ? 'put' : 'post'
-        const url = user.id ? `${baseURL}/${user.id}` : baseURL
-        axios[method](url, user)
+        const method = user_sc.id ? 'put' : 'post'
+        const url = user_sc.id ? `${baseURL_sc}/${user_sc.id}` : baseURL_sc
+        axios[method](url, user_sc)
             .then(resp => {
                 const list = getUpdateList(resp.data)
                 setItems(list)
@@ -62,7 +77,7 @@ export default function UserCRUD(){
     }
 
     const getUpdateList = (data) => {
-        const list = userList.filter((user) => user.id !== data.id)
+        const list = userList_sc.filter((user) => user.id !== data.id)
         list.unshift(data)
         return list
     }
@@ -73,7 +88,7 @@ export default function UserCRUD(){
 
     const updateField = (event) => {
         setUser({
-            ...user, [event.target.name]: event.target.value
+            ...user_sc, [event.target.name]: event.target.value
         })
     }
 
@@ -83,12 +98,9 @@ export default function UserCRUD(){
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Dono</th>
-                        <th>Pet</th>
-                        <th>Espéciel/Raça</th>
-                        <th>Contato</th>
-                        <th>Descrição</th>
-                        <th>Ações</th>
+                        <th>Cliente</th>
+                        <th>Horário</th>
+                        <th>Motivo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,15 +111,12 @@ export default function UserCRUD(){
     }
 
     function renderRows(){
-        return userList.map(user => {
+        return userList_sc.map(user => {
             return(
                 <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.dono}</td>
-                    <td>{user.pet}</td>
-                    <td>{user.especie_raca}</td>
-                    <td>{user.contato}</td>
-                    <td>{user.descricao}</td>
+                    <td>{user.id_cliente}</td>
+                    <td>{user.horario}</td>
+                    <td>{user.motivo}</td>
                     <td>
                         <button className="btn btn-warning" onClick={() => load(user)}>
                             <i className="fa fa-pencil"/>
@@ -127,11 +136,11 @@ export default function UserCRUD(){
                 <div className="row">
                     <div className="col=12 col-md-6">
                         <div className="form-group">
-                            <label>Dono</label>
+                            <label>ID_Cliente</label>
                             <input type="text" className="form-control"
-                                name="dono"
-                                value={user.dono}
-                                placeholder="Digite nome e sobrenome do dono..."
+                                name="id_cliente"
+                                value={user_sc.id_cliente}
+                                placeholder="Digite id do cliente..."
                                 onChange={event => updateField(event)}
                             />
                         </div>
@@ -139,11 +148,11 @@ export default function UserCRUD(){
 
                     <div className="col=12 col-md-6">
                         <div className="form-group">
-                            <label>Pet</label>
+                            <label>Horário</label>
                             <input type="text" className="form-control"
-                                name="pet"
-                                value={user.pet}
-                                placeholder="Digite nome do pet..."
+                                name="horario"
+                                value={user_sc.horario}
+                                placeholder="Hora:Min - Dia/Mês"
                                 onChange={event => updateField(event)}
                             />
                         </div>
@@ -151,35 +160,11 @@ export default function UserCRUD(){
 
                     <div className="col=12 col-md-6">
                         <div className="form-group">
-                            <label>Espécie/Raça</label>
+                            <label>Motivo</label>
                             <input type="text" className="form-control"
-                                name="especie_raca"
-                                value={user.especie_raca}
-                                placeholder="Digite nome da espécie ou raça do animal..."
-                                onChange={event => updateField(event)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="col=12 col-md-6">
-                        <div className="form-group">
-                            <label>Contato</label>
-                            <input type="text" className="form-control"
-                                name="contato"
-                                value={user.contato}
-                                placeholder="Telefone ou E-mail de contato..."
-                                onChange={event => updateField(event)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="col=12 col-md-6">
-                        <div className="form-group">
-                            <label>Descrição</label>
-                            <input type="text" className="form-control"
-                                name="descricao"
-                                value={user.descricao}
-                                placeholder="Informe necessidates especiais ou informações importantes sobre o animal..."
+                                name="motivo"
+                                value={user_sc.motivo}
+                                placeholder="Lavagem, Unhas, Consulta..."
                                 onChange={event => updateField(event)}
                             />
                         </div>
